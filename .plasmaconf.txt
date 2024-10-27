@@ -1,0 +1,1 @@
+{"explorer":"Dolphin.js","terminal":"Konsole.js","homeapps":["stats.js","os-main.js","autopilot.js","dev-console.js"]}
