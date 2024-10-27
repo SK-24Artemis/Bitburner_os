@@ -1,9 +1,9 @@
 /*
- _     _
-| |__ | |__      __   ___   _  ___
-| '_ \| '_ \ ____\ \ / / | | |/ _ \
-| |_) | |_) |_____\ V /| |_| |  __/
-|_.__/|_.__/       \_/  \__,_|\___|
+             ____
+ _ __  _   _| __ ) _   _ _ __ _ __
+| '_ \| | | |  _ \| | | | '__| '_ \
+| | | | |_| | |_) | |_| | |  | | | |
+|_| |_|\__,_|____/ \__,_|_|  |_| |_|
 
 */ /**
  * CONFIGURATION
@@ -11,11 +11,16 @@
  */
 
 /**
- * `bb-vue` installs to a unique subdirectory by default. To place it somewhere other than
+ * `nuburn` installs to a unique subdirectory by default. To place it somewhere other than
  * your root directory in BitBurner, set the prefixDirectory config as needed. Do not use a
  * relative path such as './myDirectory' - always use absolute paths like '/myDirectory'
  */
 let prefixDirectory = ''
+/**
+ * If you installed `bb-vue` to a separate directory, provide that directory here. Ensure the
+ * path here matches the path present in the `bb-vue` install script exactly.
+ */
+let bbVuePrefixDirectory = ''
 
 /**
  * --------------------------------------
@@ -25,8 +30,8 @@ let prefixDirectory = ''
 let requiredHost = 'home'
 let repoRoot = 'https://raw.githubusercontent.com/SK3Artemis/bb-vue'
 let repoBranch = 'dev'
-let manifestFile = 'installManifest.txt'
-let manifestTmpPath = '/tmp/installManifest__bb-vue.txt'
+let manifestFile = 'installManifestNuburn.txt'
+let manifestTmpPath = '/tmp/installManifest__nuburn.txt'
 
 export async function main(ns) {
   if (ns.getHostname() !== requiredHost) {
@@ -49,7 +54,13 @@ export async function main(ns) {
     try {
       installPath = joinPaths(prefixDirectory, installPath)
       await githubReq(ns, repoPath, installPath)
-      await rewriteImports(ns, installPath, manifestData.importRoot, prefixDirectory)
+      await rewriteImports(
+        ns,
+        installPath,
+        manifestData.importRoot,
+        prefixDirectory,
+        bbVuePrefixDirectory
+      )
       ns.tprint(`Installed: ${installPath} [${Number(i) + 1}/${manifestLength}]`)
     } catch (e) {
       ns.tprint(`ERROR: Exception while downloading ${repoPath}: `, e.message)
@@ -59,29 +70,36 @@ export async function main(ns) {
 
   ns.rm(manifestTmpPath, requiredHost)
   let mainJsPath = joinPaths(prefixDirectory, manifestData.entryFile)
-  let otherExamplePath = joinPaths(prefixDirectory, `/bb-vue/examples/1-the-app-tray.js`)
+  let replPath = joinPaths(prefixDirectory, joinPaths(manifestData.importRoot, 'repl.js'))
 
   // prettier-ignore
   ns.tprint(`
 
-Install complete! 🎉
+🎉 nuBurn installation complete! 🎉
 
-To Install Nuburn type: "run installNuburn.js"
+🚧 Make sure bb-vue is ALSO installed before running nuBurn! 🚧
 
-Run the following in your home terminal for an example that uses bb-vue:
+Run the following in your home terminal to launch nuBurn:
 run ${mainJsPath}
 
-And here's another example:
-run ${otherExamplePath}
+If you want to use the REPL, run this command:
+run ${replPath}
 
 `)
 }
 
-async function rewriteImports(ns, filePath, importRoot, prefixDirectory) {
+async function rewriteImports(ns, filePath, importRoot, prefixDirectory, bbvPrefixDirectory) {
+  const bbvImportRoot = '/bb-vue/'
+  const bbvPath = joinPaths(bbvPrefixDirectory, bbvImportRoot)
   let file = ns.read(filePath)
   file = file.replaceAll(`from '${importRoot}`, `from '${joinPaths(prefixDirectory, importRoot)}`)
   file = file.replaceAll(`from "${importRoot}`, `from "${joinPaths(prefixDirectory, importRoot)}`)
   file = file.replaceAll(`from \`${importRoot}`, `from \`${joinPaths(prefixDirectory, importRoot)}`)
+  if (bbvPrefixDirectory !== '') {
+    file = file.replaceAll(`from '${bbvImportRoot}`, `from '${bbvPath}`)
+    file = file.replaceAll(`from "${bbvImportRoot}`, `from "${bbvPath}`)
+    file = file.replaceAll(`from \`${bbvImportRoot}`, `from \`${bbvPath}`)
+  }
   await ns.write(filePath, file, 'w')
   await ns.sleep(1)
 }
