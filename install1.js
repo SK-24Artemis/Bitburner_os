@@ -46,7 +46,7 @@ let prefixDirectory = ''
 */
 
 let requiredHost = 'home'
-let repoRoot = 'https://raw.githubusercontent.com/smolgumball/bitburner-vue/main'
+let repoRoot = 'https://raw.githubusercontent.com/smolgumball/bb-vue/main'
 let manifestFile = 'installManifest.txt'
 let manifestTmpPath = '/tmp/installManifest__bitburner-vue.txt'
 
